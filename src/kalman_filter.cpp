@@ -23,19 +23,59 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 }
 
 void KalmanFilter::Predict() {
-  /**
-   * TODO: predict the state
-   */
+	/**
+	TODO:
+	  * predict the state
+	*/
+	x_ = F_ * x_;
+	P_ = F_ * P_*F_.transpose() + Q_;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Kalman Filter equations
-   */
+
+	auto y = z - H_ * x_;
+	auto S = H_ * P_*H_.transpose() + R_;
+	auto K = P_ * H_.transpose()*S.inverse();
+
+	x_ += K * y;
+	auto I = MatrixXd::Identity(4, 4);
+	P_ = (I - K * H_)*P_;
+}
+
+
+void KalmanFilter::LidarUpdate(const VectorXd &z,
+	const MatrixXd &R,
+	const MatrixXd& H) {
+
+	VectorXd y = z - H * x_;
+	MatrixXd S = H * P_*H.transpose() + R;
+	MatrixXd K = P_ * H.transpose()*S.inverse();
+	x_ += K * y;
+
+	auto I = MatrixXd::Identity(4, 4);
+	P_ = (I - K * H)*P_;
+}
+
+void KalmanFilter::RadarUpdate(const VectorXd& z,
+	const VectorXd& h_x,
+	const MatrixXd& Hj,
+	const MatrixXd& R
+)
+{
+	VectorXd y = z - h_x;
+	MatrixXd S = Hj * P_*Hj.transpose() + R;
+	MatrixXd K = P_ * Hj.transpose()*S.inverse();
+	x_ += K * y;
+	auto I = MatrixXd::Identity(4, 4);
+	P_ = (I - K * Hj)*P_;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Extended Kalman Filter equations
-   */
+	/**
+	TODO:
+	  * update the state by using Extended Kalman Filter equations
+	  *
+	*/
+	Predict();
+	Update(z);
 }
